@@ -13,10 +13,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod exchange {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        Ok(())
+    pub fn initialize(ctx: Context<InitializePool>, fees: Fee) -> Result<()> {
+        ctx.accounts.initialize(fees)
     }
 }
-
-#[derive(Accounts)]
-pub struct Initialize {}

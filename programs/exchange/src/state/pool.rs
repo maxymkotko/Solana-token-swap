@@ -1,9 +1,15 @@
 use anchor_lang::prelude::*;
+
+use crate::Fee;
 #[account]
 pub struct Pool {
-    fee: u32,
-    token_a: Pubkey,
-    token_b: Pubkey,
+    pub token_a: Pubkey,
+    pub token_b: Pubkey,
+    pub token_a_mint: Pubkey,
+    pub token_b_mint: Pubkey,
+    pub pool_mint: Pubkey,
+    pub pool_fee_account: Pubkey,
+    pub fees: Fee,
 }
 
 impl Pool {
