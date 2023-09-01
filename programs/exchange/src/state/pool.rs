@@ -14,4 +14,5 @@ pub struct Pool {
 
 impl Pool {
     pub const MAX_SIZE: usize = 4 + 32 * 2;
+    pub const INITIAL_POOL_TOKEN_SUPPLY: u64 = 1000_000_000;
 }
