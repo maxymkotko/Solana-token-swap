@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 mod constants;
+mod curve;
+mod errors;
 mod instructions;
 mod state;
 mod utils;

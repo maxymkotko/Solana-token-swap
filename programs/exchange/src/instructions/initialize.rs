@@ -1,4 +1,5 @@
 use crate::constants::*;
+use crate::errors::*;
 use crate::pool::Pool;
 use crate::utils::*;
 use crate::Fee;
@@ -16,10 +17,10 @@ pub struct InitializePool<'info> {
     pub pool_authority: AccountInfo<'info>,
     pub pool: Account<'info, Pool>,
     /// Non-zero token A account
-    #[account(owner=pool.key())]
+    #[account(owner=pool_authority.key())]
     pub token_a: Account<'info, TokenAccount>,
     /// Non-zero token B account
-    #[account(owner=pool.key())]
+    #[account(owner=pool_authority.key())]
     pub token_b: Account<'info, TokenAccount>,
     #[account(owner=pool.key())]
     pub pool_mint: Account<'info, Mint>,
@@ -42,9 +43,19 @@ impl<'info> InitializePool<'info> {
         pool.token_b = self.token_b.key();
         pool.token_a_mint = self.token_a.mint;
         pool.token_b_mint = self.token_b.mint;
-        // assert mint supply and if frozen or have invalid authorities
+        if self.pool_mint.mint_authority.is_none()
+            || self.pool_mint.mint_authority.unwrap() != self.pool_authority.key()
+        {
+            return Err(ExchangeError::InvalidAuthority.into());
+        }
+        if self.pool_mint.supply != 0 {
+            return Err(ExchangeError::PoolMintSupplyNotZero.into());
+        }
+        if self.pool_mint.freeze_authority.is_some() {
+            return Err(ExchangeError::InvalidAuthority.into());
+        }
+        // assert close authority
         // validate fees
-
         let initial_supply: u64 = Pool::INITIAL_POOL_TOKEN_SUPPLY;
         let bump = get_bump(&[INITIALIZE_POOL_TAG, self.pool.key().as_ref()], &crate::ID);
 
