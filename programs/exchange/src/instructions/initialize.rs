@@ -37,6 +37,7 @@ pub struct InitializePool<'info> {
 
 impl<'info> InitializePool<'info> {
     pub fn initialize(&mut self, fees: Fee) -> Result<()> {
+        let pool_key = self.pool.clone();
         let pool = &mut self.pool;
         pool.fees = fees;
         pool.token_a = self.token_a.key();
@@ -57,10 +58,12 @@ impl<'info> InitializePool<'info> {
         // assert close authority
         // validate fees
         let initial_supply: u64 = Pool::INITIAL_POOL_TOKEN_SUPPLY;
-        let bump = get_bump(&[INITIALIZE_POOL_TAG, self.pool.key().as_ref()], &crate::ID);
 
-        let pool_key = self.pool.key().clone();
-        let signer_seeds = &[INITIALIZE_POOL_TAG, pool_key.as_ref(), &[bump]];
+        let bump = get_bump(&[INITIALIZE_POOL_TAG, pool_key.key().as_ref()], &crate::ID);
+        pool.bump = bump;
+
+        let pool_key_ref = self.pool.key().as_ref().to_owned();
+        let signer_seeds = &[INITIALIZE_POOL_TAG, &pool_key_ref, &[bump]];
         let signer = &[&signer_seeds[..]];
 
         let cpi_accounts = MintTo {

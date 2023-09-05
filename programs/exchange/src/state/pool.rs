@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use crate::Fee;
 #[account]
 pub struct Pool {
+    pub bump: u8,
     pub token_a: Pubkey,
     pub token_b: Pubkey,
     pub token_a_mint: Pubkey,
