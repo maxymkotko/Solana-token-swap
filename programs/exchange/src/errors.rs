@@ -7,4 +7,10 @@ pub enum ExchangeError {
 
     #[msg("Authority is Invalid")]
     InvalidAuthority,
+
+    #[msg("Mint in Invalid")]
+    InvalidMint,
+
+    #[msg("Not Enough Funds")]
+    NotEnoughFunds,
 }
