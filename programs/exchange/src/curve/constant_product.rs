@@ -8,7 +8,7 @@ pub fn swap(
     pool_source_amount: u128,
     pool_destination_amount: u128,
     fee: &Fee,
-) -> Result<(u128, u128)> {
+) -> Result<(u128, u128, u128, u128, u128, u128)> {
     // Calculate the fee
     let trading_fee = calculate_fee(
         source_amount,
@@ -45,15 +45,31 @@ pub fn swap(
         .unwrap();
 
     // A' = total_source - A
-    let swapped_source_amount = total_source_amount.checked_sub(pool_source_amount).unwrap();
+    let swapped_source_amount = total_source_amount
+        .checked_sub(pool_source_amount)
+        .unwrap()
+        .checked_add(total_fee)
+        .unwrap();
 
-    Ok((swapped_source_amount, swapped_destination_amount))
+    let new_pool_source_amount = source_amount.checked_add(swapped_source_amount).unwrap();
+    let new_pool_destination_amount = pool_destination_amount
+        .checked_sub(swapped_destination_amount)
+        .unwrap();
+
+    Ok((
+        new_pool_source_amount,
+        new_pool_destination_amount,
+        swapped_source_amount,
+        swapped_destination_amount,
+        owner_fee,
+        trading_fee,
+    ))
 }
 
 fn calculate_fee(source_amount: u128, fee_numerator: u64, fee_denominator: u64) -> Option<u128> {
     let fee: u128 = source_amount
         .checked_mul(fee_numerator as u128)?
-        .checked_div(fee_numerator as u128)?;
+        .checked_div(fee_denominator as u128)?;
 
     if fee == 0 {
         Some(1)

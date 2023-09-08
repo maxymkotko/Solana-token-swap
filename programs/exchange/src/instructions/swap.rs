@@ -2,7 +2,7 @@ use crate::constants::*;
 use crate::errors::ExchangeError;
 use crate::{curve::constant_product::*, Pool};
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 use anchor_spl::token_interface::spl_token_2022::cmp_pubkeys;
 
 #[derive(Accounts)]
@@ -50,13 +50,52 @@ impl<'info> Swap<'info> {
         if self.user.lamports() < source_amount {
             return Err(ExchangeError::NotEnoughFunds.into());
         }
-        let (swapped_source_amount, swapped_destination_amount) = swap(
+        let (
+            new_pool_source_amount,
+            new_pool_destination_amount,
+            swapped_source_amount,
+            swapped_destination_amount,
+            owner_fee,
+            trading_fee,
+        ) = swap(
             source_amount as u128,
             self.pool_source_account.amount as u128,
             self.pool_destination_account.amount as u128,
             &self.pool.fees,
         )?;
+
         // transfer the swapped amounts
+        let source_transfer_accounts = Transfer {
+            authority: self.user.to_account_info(),
+            to: self.pool_source_account.to_account_info(),
+            from: self.source_account.to_account_info(),
+        };
+        let source_transfer_context = CpiContext::new(
+            self.token_program.to_account_info(),
+            source_transfer_accounts,
+        );
+        transfer(source_transfer_context, swapped_source_amount as u64)?;
+
+        let destination_transfer_accounts = Transfer {
+            authority: self.pool_authority.to_account_info(),
+            to: self.destination_account.to_account_info(),
+            from: self.pool_destination_account.to_account_info(),
+        };
+
+        let pool_key_ref = self.pool.key().as_ref().to_owned();
+        let signer_seeds = &[INITIALIZE_POOL_TAG, &pool_key_ref, &[self.pool.bump]];
+        let signer = &[&signer_seeds[..]];
+
+        let destination_transfer_context = CpiContext::new_with_signer(
+            self.token_program.to_account_info(),
+            destination_transfer_accounts,
+            signer,
+        );
+        transfer(
+            destination_transfer_context,
+            swapped_destination_amount as u64,
+        )?;
+
         Ok(())
     }
 }
