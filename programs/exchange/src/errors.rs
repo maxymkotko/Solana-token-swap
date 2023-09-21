@@ -13,4 +13,7 @@ pub enum ExchangeError {
 
     #[msg("Not Enough Funds")]
     NotEnoughFunds,
+
+    #[msg("Fail to convert the amount to specified type")]
+    ConversionFailure,
 }

@@ -1,6 +1,6 @@
 use crate::fee::*;
 use anchor_lang::Result;
-use spl_math::checked_ceil_div::CheckedCeilDiv;
+use spl_math::{checked_ceil_div::CheckedCeilDiv, precise_number::PreciseNumber};
 
 // Constant product swap : (A+A') * (B-B') = invariant
 pub fn swap(
@@ -64,6 +64,23 @@ pub fn swap(
         owner_fee,
         trading_fee,
     ))
+}
+
+pub fn calculate_withdraw_single_token_out(
+    source_amount: u128,
+    new_pool_source_amount: u128,
+    result_supply: u128,
+) -> Result<u128> {
+    let source_amount = PreciseNumber::new(source_amount).unwrap();
+    let source_amount_supply = PreciseNumber::new(new_pool_source_amount).unwrap();
+    let result_supply = PreciseNumber::new(result_supply).unwrap();
+
+    let ratio_redeemed = source_amount.checked_div(&source_amount_supply).unwrap();
+    let one = PreciseNumber::new(1).unwrap();
+    let ratio_redeemed = one.checked_sub(&ratio_redeemed).unwrap();
+    let ratio = one.checked_sub(&ratio_redeemed.sqrt().unwrap()).unwrap();
+    let result_amount = result_supply.checked_mul(&ratio).unwrap();
+    Ok(result_amount.to_imprecise().unwrap())
 }
 
 fn calculate_fee(source_amount: u128, fee_numerator: u64, fee_denominator: u64) -> Option<u128> {

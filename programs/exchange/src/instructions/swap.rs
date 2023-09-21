@@ -2,7 +2,7 @@ use crate::constants::*;
 use crate::errors::ExchangeError;
 use crate::{curve::constant_product::*, Pool};
 use anchor_lang::prelude::*;
-use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{mint_to, transfer, Mint, MintTo, Token, TokenAccount, Transfer};
 use anchor_spl::token_interface::spl_token_2022::cmp_pubkeys;
 
 #[derive(Accounts)]
@@ -95,6 +95,24 @@ impl<'info> Swap<'info> {
             destination_transfer_context,
             swapped_destination_amount as u64,
         )?;
+
+        // mint the pool_tokens propotional to owner_fee to pool_fee_account
+        let pool_tokens = calculate_withdraw_single_token_out(
+            owner_fee,
+            new_pool_source_amount,
+            new_pool_destination_amount,
+        )?;
+        let pool_mint_to_accounts = MintTo {
+            authority: self.pool_authority.to_account_info(),
+            mint: self.pool_mint.to_account_info(),
+            to: self.pool_token_fee_account.to_account_info(),
+        };
+        let pool_mint_to_context = CpiContext::new_with_signer(
+            self.token_program.to_account_info(),
+            pool_mint_to_accounts,
+            signer,
+        );
+        mint_to(pool_mint_to_context, pool_tokens as u64)?;
 
         Ok(())
     }
