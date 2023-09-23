@@ -66,6 +66,63 @@ pub fn swap(
     ))
 }
 
+pub fn deposit(
+    deposit_source_amount: u128,
+    pool_source_amount: u128,
+    pool_supply: u128,
+    fee: &Fee,
+) -> Result<(u128, u128, u128, u128)> {
+    let trading_fee = calculate_fee(
+        deposit_source_amount,
+        fee.trade_fee_numerator,
+        fee.trade_fee_denominator,
+    )
+    .unwrap();
+
+    let owner_fee = calculate_fee(
+        deposit_source_amount,
+        fee.owner_trade_fee_numerator,
+        fee.owner_trade_fee_denominator,
+    )
+    .unwrap();
+
+    let total_fee = trading_fee.checked_add(owner_fee).unwrap();
+    let deposit_source_amount_after_fee = deposit_source_amount.checked_sub(total_fee).unwrap();
+    let user_source_pool_tokens = calculate_deposit_single_token_out(
+        deposit_source_amount_after_fee,
+        deposit_source_amount,
+        pool_supply,
+    )?;
+    let new_pool_source_amount = pool_source_amount
+        .checked_add(deposit_source_amount_after_fee)
+        .unwrap();
+    let owner_fee_pool_tokens =
+        calculate_deposit_single_token_out(owner_fee, new_pool_source_amount, pool_supply)?;
+    Ok((
+        new_pool_source_amount,
+        user_source_pool_tokens,
+        owner_fee_pool_tokens,
+        trading_fee,
+    ))
+}
+
+pub fn calculate_deposit_single_token_out(
+    source_amount: u128,
+    pool_source_amount: u128,
+    pool_supply: u128,
+) -> Result<u128> {
+    let source_amount = PreciseNumber::new(source_amount).unwrap();
+    let pool_source_amount = PreciseNumber::new(pool_source_amount).unwrap();
+    let pool_supply = PreciseNumber::new(pool_supply).unwrap();
+    let one = PreciseNumber::new(1).unwrap();
+    let ratio_deposited = one
+        .checked_add(&source_amount.checked_div(&pool_source_amount).unwrap())
+        .unwrap();
+    let ratio = ratio_deposited.sqrt().unwrap().checked_sub(&one).unwrap();
+    let result_amount = pool_supply.checked_mul(&ratio).unwrap();
+    Ok(result_amount.to_imprecise().unwrap())
+}
+
 pub fn calculate_withdraw_single_token_out(
     source_amount: u128,
     new_pool_source_amount: u128,

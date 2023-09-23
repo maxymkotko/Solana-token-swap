@@ -16,12 +16,13 @@ pub struct Swap<'info> {
     /// Non-zero token B account
     #[account(owner=pool_authority.key())]
     pub pool_destination_account: Account<'info, TokenAccount>,
-    /// Non-zero token A account
+
     #[account(owner=pool_authority.key())]
     pub source_account: Account<'info, TokenAccount>,
-    /// Non-zero token B account
+
     #[account(owner=pool_authority.key())]
     pub destination_account: Account<'info, TokenAccount>,
+
     #[account(owner=pool.key())]
     pub pool_mint: Account<'info, Mint>,
     // Token A mint
@@ -100,7 +101,7 @@ impl<'info> Swap<'info> {
         let pool_tokens = calculate_withdraw_single_token_out(
             owner_fee,
             new_pool_source_amount,
-            new_pool_destination_amount,
+            self.pool_mint.supply as u128,
         )?;
         let pool_mint_to_accounts = MintTo {
             authority: self.pool_authority.to_account_info(),
