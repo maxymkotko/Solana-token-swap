@@ -3,7 +3,7 @@
 ## 🔖 About
 Exchange is an AMM based on constant product curve. Inspired from Balancer and Solana Token Swap Program.
 - Constant product:
-``A*A' + B*B' = Invariant``
+``(A+A') * (B-B') = Invariant``
 
 - Balancer WhitePaper:
 https://balancer.fi/whitepaper.pdf
