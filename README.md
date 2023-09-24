@@ -17,3 +17,5 @@ https://github.com/solana-labs/solana-program-library/tree/master/token-swap
 - Deposit tokens to get pool tokens representing the share in the pool
 - Withdraw tokens in exchange for pool tokens 
 - Swap token A with token B and vice versa after some fee
+
+** CODE IS NOT AUDITED AND STILL WIP **
