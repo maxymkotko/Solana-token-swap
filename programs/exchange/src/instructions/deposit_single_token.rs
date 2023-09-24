@@ -17,7 +17,7 @@ pub struct DepositSingleToken<'info> {
     #[account(owner=pool_authority.key())]
     pub pool_destination_account: Account<'info, TokenAccount>,
 
-    #[account(owner=pool_authority.key())]
+    #[account(token::mint=source_mint,owner=user.key())]
     pub source_account: Account<'info, TokenAccount>,
 
     #[account(token::mint=pool_mint)]
@@ -28,9 +28,6 @@ pub struct DepositSingleToken<'info> {
 
     // Token A mint
     pub source_mint: Account<'info, Mint>,
-
-    // Token B mint
-    pub destination_mint: Account<'info, Mint>,
 
     #[account(token::mint=pool_mint)]
     pub pool_token_fee_account: Account<'info, TokenAccount>,
@@ -68,13 +65,9 @@ impl<'info> DepositSingleToken<'info> {
         // transfer the source amount
         let source_amount_transfer_accounts = Transfer {
             to: self.pool_source_account.to_account_info(),
-            from: self.pool_destination_account.to_account_info(),
+            from: self.source_account.to_account_info(),
             authority: self.user.to_account_info(),
         };
-
-        // let pool_key_ref = self.pool.key().as_ref().to_owned();
-        // let signer_seeds = &[INITIALIZE_POOL_TAG, &pool_key_ref, &[self.pool.bump]];
-        // let signer = &[&signer_seeds[..]];
 
         let source_amount_transfer_context = CpiContext::new(
             self.token_program.to_account_info(),
@@ -82,6 +75,23 @@ impl<'info> DepositSingleToken<'info> {
         );
         // Source amount = source_amount_after_fee + owner_fee + trading_fee
         transfer(source_amount_transfer_context, source_amount as u64)?;
+
+        let pool_key_ref = self.pool.key().as_ref().to_owned();
+        let signer_seeds = &[INITIALIZE_POOL_TAG, &pool_key_ref, &[self.pool.bump]];
+        let signer = &[&signer_seeds[..]];
+
+        // mint deposited source amount propotional pool tokens
+        let mint_pool_tokens_account = MintTo {
+            to: self.source_account.to_account_info(),
+            mint: self.pool_mint.to_account_info(),
+            authority: self.pool_authority.to_account_info(),
+        };
+        let mint_pool_tokens_context = CpiContext::new_with_signer(
+            self.token_program.to_account_info(),
+            mint_pool_tokens_account,
+            signer,
+        );
+        mint_to(mint_pool_tokens_context, user_source_pool_tokens as u64)?;
 
         Ok(())
     }

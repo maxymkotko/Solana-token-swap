@@ -17,10 +17,10 @@ pub struct Swap<'info> {
     #[account(owner=pool_authority.key())]
     pub pool_destination_account: Account<'info, TokenAccount>,
 
-    #[account(owner=pool_authority.key())]
+    #[account(token::mint=source_mint,owner=user.key())]
     pub source_account: Account<'info, TokenAccount>,
 
-    #[account(owner=pool_authority.key())]
+    #[account(token::mint=destination_mint,owner=user.key())]
     pub destination_account: Account<'info, TokenAccount>,
 
     #[account(owner=pool.key())]
