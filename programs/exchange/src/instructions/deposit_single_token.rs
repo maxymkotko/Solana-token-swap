@@ -54,13 +54,11 @@ impl<'info> DepositSingleToken<'info> {
         if self.user.lamports() < source_amount {
             return Err(ExchangeError::NotEnoughFunds.into());
         }
-        let (new_pool_source_amount, user_source_pool_tokens, owner_fee_pool_tokens, trading_fee) =
-            deposit(
-                source_amount.into(),
-                self.pool_source_account.amount.into(),
-                self.pool_mint.supply.into(),
-                &fee,
-            )?;
+        let user_source_pool_tokens = calculate_deposit_single_token_out(
+            source_amount as u128,
+            self.pool_source_account.amount as u128,
+            self.pool_mint.supply as u128,
+        )?;
 
         // transfer the source amount
         let source_amount_transfer_accounts = Transfer {

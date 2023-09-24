@@ -66,46 +66,6 @@ pub fn swap(
     ))
 }
 
-pub fn deposit(
-    deposit_source_amount: u128,
-    pool_source_amount: u128,
-    pool_supply: u128,
-    fee: &Fee,
-) -> Result<(u128, u128, u128, u128)> {
-    let trading_fee = calculate_fee(
-        deposit_source_amount,
-        fee.trade_fee_numerator,
-        fee.trade_fee_denominator,
-    )
-    .unwrap();
-
-    let owner_fee = calculate_fee(
-        deposit_source_amount,
-        fee.owner_trade_fee_numerator,
-        fee.owner_trade_fee_denominator,
-    )
-    .unwrap();
-
-    let total_fee = trading_fee.checked_add(owner_fee).unwrap();
-    let deposit_source_amount_after_fee = deposit_source_amount.checked_sub(total_fee).unwrap();
-    let user_source_pool_tokens = calculate_deposit_single_token_out(
-        deposit_source_amount_after_fee,
-        deposit_source_amount,
-        pool_supply,
-    )?;
-    let new_pool_source_amount = pool_source_amount
-        .checked_add(deposit_source_amount_after_fee)
-        .unwrap();
-    let owner_fee_pool_tokens =
-        calculate_deposit_single_token_out(owner_fee, new_pool_source_amount, pool_supply)?;
-    Ok((
-        new_pool_source_amount,
-        user_source_pool_tokens,
-        owner_fee_pool_tokens,
-        trading_fee,
-    ))
-}
-
 pub fn calculate_deposit_single_token_out(
     source_amount: u128,
     pool_source_amount: u128,
