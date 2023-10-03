@@ -100,7 +100,11 @@ pub fn calculate_withdraw_single_token_out(
     Ok(result_amount.to_imprecise().unwrap())
 }
 
-fn calculate_fee(source_amount: u128, fee_numerator: u64, fee_denominator: u64) -> Option<u128> {
+pub fn calculate_fee(
+    source_amount: u128,
+    fee_numerator: u64,
+    fee_denominator: u64,
+) -> Option<u128> {
     let fee: u128 = source_amount
         .checked_mul(fee_numerator as u128)?
         .checked_div(fee_denominator as u128)?;
