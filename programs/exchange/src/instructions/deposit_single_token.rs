@@ -1,5 +1,5 @@
+use crate::constants::*;
 use crate::errors::ExchangeError;
-use crate::{constants::*, Fee};
 use crate::{curve::constant_product::*, Pool};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{mint_to, transfer, Mint, MintTo, Token, TokenAccount, Transfer};
@@ -41,17 +41,14 @@ pub struct DepositSingleToken<'info> {
 }
 
 impl<'info> DepositSingleToken<'info> {
-    pub fn deposit_single_token_in(&mut self, source_amount: u64, fee: Fee) -> Result<()> {
+    pub fn deposit_single_token_in(&mut self, source_amount: u64) -> Result<()> {
         if !cmp_pubkeys(&self.pool_source_account.mint, &self.source_account.mint) {
             return Err(ExchangeError::InvalidMint.into());
         }
-        if !cmp_pubkeys(
-            &self.pool_destination_account.mint,
-            &self.pool_destination_account.mint,
-        ) {
+        if !cmp_pubkeys(&self.pool_destination_account.mint, &self.pool.pool_mint) {
             return Err(ExchangeError::InvalidMint.into());
         }
-        if self.user.lamports() < source_amount {
+        if self.source_account.amount < source_amount {
             return Err(ExchangeError::NotEnoughFunds.into());
         }
         let user_source_pool_tokens = calculate_deposit_single_token_out(
@@ -71,7 +68,6 @@ impl<'info> DepositSingleToken<'info> {
             self.token_program.to_account_info(),
             source_amount_transfer_accounts,
         );
-        // Source amount = source_amount_after_fee + owner_fee + trading_fee
         transfer(source_amount_transfer_context, source_amount as u64)?;
 
         let pool_key_ref = self.pool.key().as_ref().to_owned();

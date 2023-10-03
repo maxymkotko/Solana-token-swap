@@ -42,10 +42,7 @@ impl<'info> Swap<'info> {
         if !cmp_pubkeys(&self.pool_source_account.mint, &self.source_account.mint) {
             return Err(ExchangeError::InvalidMint.into());
         }
-        if !cmp_pubkeys(
-            &self.pool_destination_account.mint,
-            &self.pool_destination_account.mint,
-        ) {
+        if !cmp_pubkeys(&self.pool_destination_account.mint, &self.pool.pool_mint) {
             return Err(ExchangeError::InvalidMint.into());
         }
         if self.user.lamports() < source_amount {
