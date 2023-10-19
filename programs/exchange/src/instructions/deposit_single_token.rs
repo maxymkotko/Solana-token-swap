@@ -51,7 +51,7 @@ impl<'info> DepositSingleToken<'info> {
         if self.source_account.amount < source_amount {
             return Err(ExchangeError::NotEnoughFunds.into());
         }
-        let user_source_pool_tokens = calculate_deposit_single_token_out(
+        let user_source_pool_tokens = calculate_deposit_single_token_in(
             source_amount as u128,
             self.pool_source_account.amount as u128,
             self.pool_mint.supply as u128,

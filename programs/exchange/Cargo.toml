@@ -21,3 +21,7 @@ anchor-spl = "0.28.0"
 spl-token = { version = "3.5",  features = ["no-entrypoint"] }
 winnow="=0.4.1"
 spl-math = "0.2.0"
+
+[dev-dependencies]
+anchor-client = { version="0.28.0", features = ["debug", "async"] }
+solana-program-test = "1.16.10"

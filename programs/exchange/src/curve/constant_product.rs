@@ -66,7 +66,7 @@ pub fn swap(
     ))
 }
 
-pub fn calculate_deposit_single_token_out(
+pub fn calculate_deposit_single_token_in(
     source_amount: u128,
     pool_source_amount: u128,
     pool_supply: u128,
@@ -98,6 +98,27 @@ pub fn calculate_withdraw_single_token_out(
     let ratio = one.checked_sub(&ratio_redeemed.sqrt().unwrap()).unwrap();
     let result_amount = result_supply.checked_mul(&ratio).unwrap();
     Ok(result_amount.to_imprecise().unwrap())
+}
+
+pub fn convert_pool_tokens_to_trade_tokens(
+    pool_token_amount: u128,
+    pool_token_supply: u128,
+    pool_token_a: u128,
+    pool_token_b: u128,
+) -> Result<(u128, u128)> {
+    let token_a = pool_token_amount
+        .checked_mul(pool_token_a)
+        .unwrap()
+        .checked_div(pool_token_supply)
+        .unwrap();
+
+    let token_b = pool_token_amount
+        .checked_mul(pool_token_b)
+        .unwrap()
+        .checked_div(pool_token_supply)
+        .unwrap();
+
+    Ok((token_a, token_b))
 }
 
 pub fn calculate_fee(

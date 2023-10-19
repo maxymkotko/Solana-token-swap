@@ -16,4 +16,7 @@ pub enum ExchangeError {
 
     #[msg("Fail to convert the amount to specified type")]
     ConversionFailure,
+
+    #[msg("Exceeded the slippage on trade")]
+    SlippageExceeded,
 }
